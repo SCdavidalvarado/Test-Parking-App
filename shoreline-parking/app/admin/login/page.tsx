@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
         <p className="text-xs uppercase tracking-widest text-charcoal-muted font-semibold">
           Parking Admin
         </p>
-        <h1 className="font-display text-2xl font-medium text-charcoal mt-1 mb-6">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-charcoal mt-1 mb-6">
           Sign in
         </h1>
 

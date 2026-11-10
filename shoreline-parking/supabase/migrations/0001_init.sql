@@ -100,7 +100,11 @@ begin
   values (new.lot_id, new.estimated_pct, new.entrances_affected, new.notes, new.updated_by);
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql security definer set search_path = public;
+-- NOTE: security definer matters. lot_status_history has Row Level Security
+-- on and no INSERT policy, so without it this trigger runs as the logged-in
+-- admin, gets blocked, and rolls back EVERY lot_status update (percentages
+-- silently never save).
 
 drop trigger if exists trg_log_lot_status_history on lot_status;
 create trigger trg_log_lot_status_history
@@ -154,6 +158,25 @@ create policy "Admins can read history" on lot_status_history
 create policy "Users can read own profile" on profiles
   for select using (id = auth.uid());
 
+-- Allows manually inserting admin profile rows (via SQL Editor or the
+-- dashboard's Policies UI) when bootstrapping new admin accounts. Safe
+-- here since there's no public sign-up in this app — admin accounts are
+-- always created manually by a project owner in the Supabase dashboard.
+-- A future "manage admins" screen could tighten this to super_admin-only.
+create policy "Allow inserting profiles" on profiles
+  for insert with check (true);
+
 -- No public policy for INSERT/UPDATE/DELETE on lots or profiles —
 -- capacities and roles are managed directly in the Supabase dashboard
 -- for now (a future Settings page can add super_admin-only policies here).
+
+-- ------------------------------------------------------------
+-- REALTIME
+-- ------------------------------------------------------------
+
+-- Tables must be explicitly added to Supabase's realtime publication —
+-- they don't broadcast changes by default even if a client subscribes.
+-- Without this, the Operations Dashboard's live-update subscription
+-- silently never fires.
+alter publication supabase_realtime add table lot_status;
+alter publication supabase_realtime add table parking_settings;

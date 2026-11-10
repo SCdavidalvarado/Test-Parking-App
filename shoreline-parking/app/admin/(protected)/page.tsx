@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRealtimeLots } from "@/hooks/useRealtimeLots";
 import { getBrowserClient } from "@/lib/supabase/client";
 import { TrafficFlowControl } from "@/components/admin/TrafficFlowControl";
@@ -18,72 +18,77 @@ export default function AdminDashboardPage() {
   const overallStatus = getStatusForPct(overallPct, thresholds);
   const lastUpdated = mostRecentTimestamp(lots, settings?.last_updated_at ?? null);
 
-  // Debounce percentage writes so dragging the slider doesn't fire a write
-  // per pixel — mirrors the pattern used in the original single-page console.
-  const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  // Shows a visible error if a save is rejected by the database. Before this,
+  // failed saves were silent — the slider moved but nothing was stored.
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Debounced write — LotEditorCard keeps its own local draft state so the
-  // slider itself feels instant regardless of this delay.
-  const handleUpdatePct = useCallback((lotId: string, pct: number) => {
-    clearTimeout(debounceTimers.current[lotId]);
-    debounceTimers.current[lotId] = setTimeout(async () => {
+  // Runs one update, surfaces any error, and refreshes the data afterward.
+  const runUpdate = useCallback(
+    async (
+      table: "lot_status" | "parking_settings",
+      values: Record<string, unknown>,
+      match: { column: string; value: string | number }
+    ) => {
       const supabase = getBrowserClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      await supabase
-        .from("lot_status")
-        .update({ estimated_pct: pct, updated_by: user?.id ?? null })
-        .eq("lot_id", lotId);
-    }, 300);
-  }, []);
+
+      if (!user) {
+        setSaveError("You're signed out — please sign in again, then retry.");
+        return;
+      }
+
+      const { error } = await supabase
+        .from(table)
+        .update({ ...values, updated_by: user.id })
+        .eq(match.column, match.value);
+
+      if (error) {
+        setSaveError(`Couldn't save: ${error.message}`);
+      } else {
+        setSaveError(null);
+      }
+      refresh();
+    },
+    [refresh]
+  );
+
+  // Debounce percentage writes so dragging the slider doesn't fire a write
+  // per pixel. LotEditorCard keeps its own local draft so the slider itself
+  // feels instant regardless of this delay.
+  const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const handleUpdatePct = useCallback(
+    (lotId: string, pct: number) => {
+      clearTimeout(debounceTimers.current[lotId]);
+      debounceTimers.current[lotId] = setTimeout(() => {
+        runUpdate("lot_status", { estimated_pct: pct }, { column: "lot_id", value: lotId });
+      }, 300);
+    },
+    [runUpdate]
+  );
 
   const handleToggleEntrance = useCallback(
-    async (lotId: string, entrance: string, current: string[]) => {
+    (lotId: string, entrance: string, current: string[]) => {
       const next = current.includes(entrance)
         ? current.filter((e) => e !== entrance)
         : [...current, entrance];
-      const supabase = getBrowserClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      await supabase
-        .from("lot_status")
-        .update({ entrances_affected: next, updated_by: user?.id ?? null })
-        .eq("lot_id", lotId);
-      refresh();
+      return runUpdate("lot_status", { entrances_affected: next }, { column: "lot_id", value: lotId });
     },
-    [refresh]
+    [runUpdate]
   );
 
   const handleSaveNotes = useCallback(
-    async (lotId: string, notes: string) => {
-      const supabase = getBrowserClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      await supabase
-        .from("lot_status")
-        .update({ notes, updated_by: user?.id ?? null })
-        .eq("lot_id", lotId);
-      refresh();
-    },
-    [refresh]
+    (lotId: string, notes: string) =>
+      runUpdate("lot_status", { notes }, { column: "lot_id", value: lotId }),
+    [runUpdate]
   );
 
   const handleTrafficFlowChange = useCallback(
-    async (flow: TrafficFlow) => {
-      const supabase = getBrowserClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      await supabase
-        .from("parking_settings")
-        .update({ traffic_flow: flow, last_updated_at: new Date().toISOString(), updated_by: user?.id ?? null })
-        .eq("id", 1);
-      refresh();
-    },
-    [refresh]
+    (flow: TrafficFlow) =>
+      runUpdate("parking_settings", { traffic_flow: flow }, { column: "id", value: 1 }),
+    [runUpdate]
   );
 
   const sortedLots = useMemo(
@@ -97,13 +102,22 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {saveError && (
+        <div
+          role="alert"
+          className="rounded-xl2 border border-status-full/30 bg-status-full-bg px-4 py-3 text-sm font-medium text-status-full"
+        >
+          {saveError}
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <span className="text-xs uppercase tracking-widest text-charcoal-muted font-semibold">
             Overall Estimated Capacity
           </span>
           <div className="flex items-center gap-3 mt-1">
-            <span className="font-display text-4xl font-medium text-charcoal">
+            <span className="font-display text-4xl font-semibold tracking-tight text-charcoal">
               {overallPct}%
             </span>
             <StatusPill status={overallStatus} />

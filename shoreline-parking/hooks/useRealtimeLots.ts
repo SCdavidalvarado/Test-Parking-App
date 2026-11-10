@@ -83,7 +83,14 @@ export function useRealtimeLots(): UseRealtimeLotsResult {
       )
       .subscribe();
 
+    // Safety net: also re-fetch every 8 seconds. Realtime gives instant
+    // updates, but this keeps both dashboards correct (within a few
+    // seconds) even if Realtime isn't enabled for the tables or a
+    // connection drops silently.
+    const poll = setInterval(fetchAll, 8000);
+
     return () => {
+      clearInterval(poll);
       supabase.removeChannel(channel);
     };
   }, [fetchAll]);

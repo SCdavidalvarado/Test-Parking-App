@@ -18,13 +18,13 @@ export function LotCard({
   return (
     <Card className="p-6 flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
-        <h3 className="font-display text-xl font-medium text-charcoal">{lot.name}</h3>
+        <h3 className="font-display text-xl font-semibold tracking-tight text-charcoal">{lot.name}</h3>
         <StatusPill status={status} size="sm" />
       </div>
 
       <div>
         <div className="flex items-baseline justify-between mb-2">
-          <span className="font-display text-3xl font-medium text-charcoal">
+          <span className="font-display text-3xl font-semibold tracking-tight text-charcoal">
             {Math.round(lot.estimated_pct)}%
           </span>
         </div>

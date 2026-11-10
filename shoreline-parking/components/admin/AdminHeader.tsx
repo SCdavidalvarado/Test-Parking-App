@@ -21,7 +21,7 @@ export function AdminHeader() {
           <p className="text-xs uppercase tracking-widest text-charcoal-muted font-semibold">
             Parking Admin
           </p>
-          <h1 className="font-display text-xl font-medium text-charcoal">
+          <h1 className="font-display text-xl font-semibold tracking-tight text-charcoal">
             Shoreline City Church
           </h1>
         </div>

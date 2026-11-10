@@ -21,7 +21,7 @@ export default function OperationsDashboardPage() {
           <p className="text-xs uppercase tracking-widest text-charcoal-muted font-semibold">
             Shoreline City Church &middot; Dallas, TX
           </p>
-          <h1 className="font-display text-3xl sm:text-4xl font-medium text-charcoal mt-1">
+          <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-charcoal mt-1">
             Parking Status
           </h1>
         </header>

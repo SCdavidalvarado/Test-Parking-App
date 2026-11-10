@@ -24,7 +24,7 @@ export function OverallSummaryCard({
             Estimated Capacity
           </span>
           <div className="mt-2 flex items-baseline gap-4">
-            <span className="font-display text-6xl sm:text-7xl font-medium text-charcoal">
+            <span className="font-display text-6xl sm:text-7xl font-semibold tracking-tight text-charcoal">
               {pct}%
             </span>
             <StatusPill status={status} />

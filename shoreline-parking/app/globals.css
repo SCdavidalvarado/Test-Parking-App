@@ -3,9 +3,10 @@
 @tailwind utilities;
 
 html {
-  background-color: #f7f3ec;
+  background-color: #ffffff;
 }
 
 body {
   @apply bg-cream text-charcoal font-body antialiased;
+  border-top: 6px solid #111827;
 }

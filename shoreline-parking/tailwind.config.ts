@@ -8,40 +8,45 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // "White" look: pure white page, ink-black accents, hairline borders.
+        // `cream` keeps its name so existing classes (bg-cream, text-cream)
+        // keep working — it's simply white now.
         cream: {
-          DEFAULT: "#F7F3EC",
-          soft: "#FBF9F5",
+          DEFAULT: "#FFFFFF",
+          soft: "#FFFFFF",
         },
         charcoal: {
-          DEFAULT: "#23241F",
-          muted: "#6B6A63",
+          DEFAULT: "#111827",
+          muted: "#5B6472",
         },
-        line: "#E4DDCF",
+        line: "#E5E7EB",
         surface: {
           DEFAULT: "#FFFFFF",
-          muted: "#F1ECE3",
+          muted: "#F3F4F6",
         },
+        // Pill text (dark enough to pass contrast) + soft pill backgrounds.
+        // The brighter bar colors live in StatusPill.tsx (statusAccentColor).
         status: {
-          open: "#5F7A5A",
-          "open-bg": "#E7ECDF",
-          filling: "#B08A4E",
-          "filling-bg": "#F3E9D4",
-          nearly: "#B5643A",
-          "nearly-bg": "#F5E1D3",
-          full: "#6E3B34",
-          "full-bg": "#EAD9D6",
+          open: "#1F6B58",
+          "open-bg": "#E3F4EE",
+          filling: "#7A5200",
+          "filling-bg": "#FBF0D4",
+          nearly: "#8A3D0E",
+          "nearly-bg": "#FDE6D6",
+          full: "#8A1F1A",
+          "full-bg": "#FBE0DE",
         },
       },
       fontFamily: {
-        display: ["var(--font-display)", "Georgia", "serif"],
+        display: ["var(--font-display)", "system-ui", "sans-serif"],
         body: ["var(--font-body)", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
       },
       borderRadius: {
-        xl2: "1.25rem",
+        xl2: "1rem",
       },
       boxShadow: {
-        soft: "0 2px 10px rgba(35, 36, 31, 0.05), 0 1px 2px rgba(35, 36, 31, 0.04)",
-        card: "0 4px 24px rgba(35, 36, 31, 0.06)",
+        soft: "0 1px 2px rgba(17, 24, 39, 0.05)",
+        card: "0 1px 2px rgba(17, 24, 39, 0.05)",
       },
     },
   },

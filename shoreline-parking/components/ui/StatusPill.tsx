@@ -28,12 +28,12 @@ export function StatusPill({
 export function statusAccentColor(status: CapacityStatus): string {
   switch (status) {
     case "Open":
-      return "#5F7A5A";
+      return "#4C9F8A";
     case "Filling Up":
-      return "#B08A4E";
+      return "#D9A441";
     case "Nearly Full":
-      return "#B5643A";
+      return "#E07A3A";
     case "Full":
-      return "#6E3B34";
+      return "#C2413B";
   }
 }
