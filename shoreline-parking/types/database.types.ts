@@ -39,6 +39,8 @@ export interface Database {
           notes: string | null;
           updated_at: string;
           updated_by: string | null;
+          is_closed: boolean;
+          closed_reason: string | null;
         };
         Insert: Partial<Database["public"]["Tables"]["lot_status"]["Row"]> & {
           lot_id: string;

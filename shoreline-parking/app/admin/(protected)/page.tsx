@@ -85,6 +85,26 @@ export default function AdminDashboardPage() {
     [runUpdate]
   );
 
+  const handleToggleClosed = useCallback(
+    (lotId: string, nextClosed: boolean) =>
+      runUpdate(
+        "lot_status",
+        nextClosed ? { is_closed: true } : { is_closed: false, closed_reason: null },
+        { column: "lot_id", value: lotId }
+      ),
+    [runUpdate]
+  );
+
+  const handleSaveReason = useCallback(
+    (lotId: string, reason: string) =>
+      runUpdate(
+        "lot_status",
+        { closed_reason: reason.trim() === "" ? null : reason.trim() },
+        { column: "lot_id", value: lotId }
+      ),
+    [runUpdate]
+  );
+
   const handleTrafficFlowChange = useCallback(
     (flow: TrafficFlow) =>
       runUpdate("parking_settings", { traffic_flow: flow }, { column: "id", value: 1 }),
@@ -147,6 +167,8 @@ export default function AdminDashboardPage() {
             onUpdatePct={handleUpdatePct}
             onToggleEntrance={handleToggleEntrance}
             onSaveNotes={handleSaveNotes}
+            onToggleClosed={handleToggleClosed}
+            onSaveReason={handleSaveReason}
           />
         ))}
       </div>

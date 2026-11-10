@@ -16,7 +16,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Shoreline City Church — Parking",
+  title: "SC Valet Tracker — Shoreline City Church",
   description: "Live parking status for Shoreline City Church, Dallas TX",
 };
 

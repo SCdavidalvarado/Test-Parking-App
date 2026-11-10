@@ -10,6 +10,8 @@ export interface LotWithStatus {
   entrances_affected: string[];
   notes: string | null;
   updated_at: string | null;
+  is_closed: boolean;
+  closed_reason: string | null;
 }
 
 export interface ParkingSettings {

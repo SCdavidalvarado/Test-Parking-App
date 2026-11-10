@@ -48,6 +48,8 @@ export function useRealtimeLots(): UseRealtimeLotsResult {
           entrances_affected: status?.entrances_affected ?? [],
           notes: status?.notes ?? null,
           updated_at: status?.updated_at ?? null,
+          is_closed: status?.is_closed ?? false,
+          closed_reason: status?.closed_reason ?? null,
         };
       });
       setLots(merged);

@@ -15,6 +15,8 @@ interface LotEditorCardProps {
   onUpdatePct: (lotId: string, pct: number) => void;
   onToggleEntrance: (lotId: string, entrance: string, currentlyAffected: string[]) => void;
   onSaveNotes: (lotId: string, notes: string) => void;
+  onToggleClosed: (lotId: string, nextClosed: boolean) => void;
+  onSaveReason: (lotId: string, reason: string) => void;
 }
 
 export function LotEditorCard({
@@ -23,6 +25,8 @@ export function LotEditorCard({
   onUpdatePct,
   onToggleEntrance,
   onSaveNotes,
+  onToggleClosed,
+  onSaveReason,
 }: LotEditorCardProps) {
   const [notesDraft, setNotesDraft] = useState(lot.notes ?? "");
   const [notesDirty, setNotesDirty] = useState(false);
@@ -55,13 +59,56 @@ export function LotEditorCard({
     }, 1200);
   }
 
+  // Typed reason for a closed lot: kept as a local draft so typing feels
+  // instant, then saved automatically a moment after the admin stops typing
+  // (or when they click out of the box).
+  const MAX_REASON = 60;
+  const [reasonDraft, setReasonDraft] = useState(lot.closed_reason ?? "");
+  const reasonDirty = useRef(false);
+  const reasonTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    if (!reasonDirty.current) setReasonDraft(lot.closed_reason ?? "");
+  }, [lot.closed_reason]);
+
+  function handleReasonChange(value: string) {
+    const next = value.slice(0, MAX_REASON);
+    reasonDirty.current = true;
+    setReasonDraft(next);
+    clearTimeout(reasonTimer.current);
+    reasonTimer.current = setTimeout(() => {
+      onSaveReason(lot.id, next);
+      reasonDirty.current = false;
+    }, 700);
+  }
+
+  function flushReason() {
+    if (!reasonDirty.current) return;
+    clearTimeout(reasonTimer.current);
+    onSaveReason(lot.id, reasonDraft);
+    reasonDirty.current = false;
+  }
+
+  function handleToggleClosed() {
+    // Don't let a pending reason save land after the lot is reopened.
+    clearTimeout(reasonTimer.current);
+    reasonDirty.current = false;
+    onToggleClosed(lot.id, !lot.is_closed);
+  }
+
   const status = getStatusForPct(pctDraft, thresholds);
 
   return (
     <Card className="p-6 flex flex-col gap-5">
       <div className="flex items-start justify-between gap-3">
         <h3 className="font-display text-xl font-semibold tracking-tight text-charcoal">{lot.name}</h3>
-        <StatusPill status={status} size="sm" />
+        {lot.is_closed ? (
+          <span className="inline-flex items-center rounded-full bg-charcoal px-2.5 py-1 text-[11px] font-semibold tracking-wide text-cream">
+            Closed
+          </span>
+        ) : (
+          <StatusPill status={status} size="sm" />
+        )}
       </div>
 
       <div>
@@ -71,16 +118,82 @@ export function LotEditorCard({
           </span>
           <span className="text-xs text-charcoal-muted">Capacity: {lot.capacity}</span>
         </div>
-        <ProgressBar pct={pctDraft} status={status} />
+        {lot.is_closed ? (
+          <div
+            className="h-2.5 rounded-full"
+            style={{
+              background:
+                "repeating-linear-gradient(135deg, #D1D5DB 0, #D1D5DB 8px, #F3F4F6 8px, #F3F4F6 16px)",
+            }}
+          />
+        ) : (
+          <ProgressBar pct={pctDraft} status={status} />
+        )}
         <input
           type="range"
           min={0}
           max={100}
           step={1}
           value={pctDraft}
+          disabled={lot.is_closed}
+          aria-label={`${lot.name} estimated fullness`}
           onChange={(e) => handleSliderChange(Number(e.target.value))}
-          className="w-full mt-3 accent-charcoal cursor-pointer"
+          className={`w-full mt-3 accent-charcoal ${
+            lot.is_closed ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
+          }`}
         />
+      </div>
+
+      <div>
+        <button
+          onClick={handleToggleClosed}
+          className={`inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-charcoal px-4 py-3 text-sm font-bold transition-colors ${
+            lot.is_closed
+              ? "bg-charcoal text-cream hover:bg-charcoal/90"
+              : "bg-surface text-charcoal hover:bg-surface-muted"
+          }`}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M5.6 5.6l12.8 12.8" />
+          </svg>
+          {lot.is_closed ? "Reopen lot" : "Close this lot"}
+        </button>
+
+        {lot.is_closed && (
+          <div className="mt-4 border-t border-line pt-4">
+            <label
+              htmlFor={`closed-reason-${lot.id}`}
+              className="block text-xs uppercase tracking-widest text-charcoal-muted font-semibold mb-2"
+            >
+              Why is it closed? Shown to everyone
+            </label>
+            <input
+              id={`closed-reason-${lot.id}`}
+              type="text"
+              maxLength={MAX_REASON}
+              value={reasonDraft}
+              onChange={(e) => handleReasonChange(e.target.value)}
+              onBlur={flushReason}
+              placeholder="e.g. Wet grass — please use the other lots"
+              className="w-full rounded-lg border border-line bg-surface px-3.5 py-3 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-charcoal/20"
+            />
+            <p className="mt-2 text-xs text-charcoal-muted">
+              {reasonDraft.length} / {MAX_REASON} &middot; The percentage is paused while the lot is
+              closed.
+            </p>
+          </div>
+        )}
       </div>
 
       <div>

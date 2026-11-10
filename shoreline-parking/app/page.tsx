@@ -13,6 +13,8 @@ export default function OperationsDashboardPage() {
   const overallPct = computeOverallPct(lots);
   const overallStatus = getStatusForPct(overallPct, thresholds);
   const lastUpdated = mostRecentTimestamp(lots, settings?.last_updated_at ?? null);
+  const closedNames = lots.filter((l) => l.is_closed).map((l) => l.name);
+  const allClosed = lots.length > 0 && closedNames.length === lots.length;
 
   return (
     <main className="min-h-screen px-4 py-10 sm:py-14">
@@ -22,7 +24,7 @@ export default function OperationsDashboardPage() {
             Shoreline City Church &middot; Dallas, TX
           </p>
           <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-charcoal mt-1">
-            Parking Status
+            SC Valet Tracker
           </h1>
         </header>
 
@@ -35,6 +37,8 @@ export default function OperationsDashboardPage() {
               status={overallStatus}
               trafficFlow={settings?.traffic_flow ?? "medium"}
               lastUpdated={lastUpdated}
+              closedNames={closedNames}
+              allClosed={allClosed}
             />
             <LotGrid lots={lots} thresholds={thresholds} />
           </>

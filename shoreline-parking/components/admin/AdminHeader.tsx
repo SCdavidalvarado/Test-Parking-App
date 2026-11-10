@@ -19,10 +19,10 @@ export function AdminHeader() {
       <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-widest text-charcoal-muted font-semibold">
-            Parking Admin
+            Shoreline City Church · Parking Admin
           </p>
           <h1 className="font-display text-xl font-semibold tracking-tight text-charcoal">
-            Shoreline City Church
+            SC Valet Tracker
           </h1>
         </div>
         <Button variant="secondary" onClick={handleSignOut}>

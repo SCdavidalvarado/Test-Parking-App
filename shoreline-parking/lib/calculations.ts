@@ -6,7 +6,10 @@ import type { CapacityStatus, LotWithStatus } from "@/types/domain";
  * capacity. Never stored — always derived, so it can't drift out of sync
  * with the individual lot percentages.
  */
-export function computeOverallPct(lots: LotWithStatus[]): number {
+export function computeOverallPct(allLots: LotWithStatus[]): number {
+  // Closed lots aren't taking cars, so they're left out of the overall number —
+  // otherwise closing a lot would make the whole church look emptier than it is.
+  const lots = allLots.filter((lot) => !lot.is_closed);
   const totalCapacity = lots.reduce((sum, lot) => sum + lot.capacity, 0);
   if (totalCapacity === 0) return 0;
   const weightedSum = lots.reduce(
